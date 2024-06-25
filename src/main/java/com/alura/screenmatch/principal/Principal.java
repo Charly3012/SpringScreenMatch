@@ -1,13 +1,12 @@
 package com.alura.screenmatch.principal;
 
-import com.alura.screenmatch.model.DatosEpisodio;
-import com.alura.screenmatch.model.DatosSerie;
-import com.alura.screenmatch.model.DatosTemporada;
-import com.alura.screenmatch.model.Episodio;
+import com.alura.screenmatch.model.*;
 import com.alura.screenmatch.service.ConsumoAPI;
 import com.alura.screenmatch.service.ConvierteDatos;
 import org.springframework.cglib.core.Local;
 
+import java.net.URL;
+import java.sql.ClientInfoStatus;
 import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,12 +20,54 @@ public class Principal {
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     private final String URL_BASE = "https://www.omdbapi.com/?t=";
     private final String APIKEY = "&apikey=555af605";
-
     private ConvierteDatos conversor = new ConvierteDatos();
+    private List<DatosSerie> datosSeries = new ArrayList<>();
 
 
 
     public void mostrarMenu(){
+
+        var opcion = -1;
+        while (opcion != 0) {
+            var menu = """
+                    Menu
+                    1 - Buscar series
+                    2 - Buscar episodios
+                    3 - Mostrar series buscadas
+                    
+                    0 - Salir
+                    """;
+
+            System.out.println(menu);
+            opcion = sc.nextInt();
+            sc.nextLine();
+
+            switch (opcion)
+            {
+                case 1:
+                    buscarSerieWeb();
+                    break;
+
+                case 2:
+                    buscarEpisodioPorSerie();
+                    break;
+
+                case 3:
+                    mostrarSeriesBuscadas();
+                    break;
+
+                case 0:
+                    System.out.println("Cerrando la aplicación ...");
+                    break;
+
+                default:
+                    System.out.println("Opción inválida");
+            }
+        }
+
+
+
+        /*
         System.out.println("Escriba el nombre de la serie que deseas buscar: ");
 
         //Busca los datos generales de la serie
@@ -37,7 +78,10 @@ public class Principal {
         System.out.println(datos);
         //Busca los datos de todas las temporadas
         List<DatosTemporada> temporadas = new ArrayList<>();
+         */
 
+
+        /*
         for(int i = 1; i <= datos.totalTemporadas(); i++){
             json = consumoAPI.obtenerDatos(URL_BASE + nombreSerie.replace(" ", "+")+ "&Season="
                     + i + APIKEY);
@@ -45,6 +89,8 @@ public class Principal {
             temporadas.add(datosTemporadas);
         }
         temporadas.forEach(System.out::println);
+
+         */
 
         /*
         //Mostrar solo el titulo de los episodios para las temporadas
@@ -63,6 +109,7 @@ public class Principal {
         //temporadas.forEach(t -> t.episodios().forEach(e -> System.out.println(e.titulo())));
 
 
+        /*
         //Convertir todas las informaciones a una lista de tipo DatosEpisodio
 
         System.out.println("Top 5 mejores episodios: ");
@@ -71,6 +118,8 @@ public class Principal {
                 .collect(Collectors.toList()); //Convierte en una lista mutable
         //toList -> listas inmutables
         //collet(Collector.toList() -> Listas mutables
+
+         */
 
         /*
 
@@ -86,12 +135,15 @@ public class Principal {
         //Convirtiendo los datos de tipo episodio
          */
 
+        /*
         List<Episodio> episodiosList = temporadas.stream()
                 .flatMap(t -> t.episodios().stream()
                         .map(d -> new Episodio(t.temporada(), d)))
                 .collect(Collectors.toList());
 
         episodiosList.forEach(System.out::println);
+
+         */
 
 
 
@@ -132,6 +184,7 @@ public class Principal {
 
          */
 
+        /*
         Map<Integer, Double> evaluacionesTemporada = episodiosList.stream()
                 .filter(e -> e.getEvaluacion() > 0.0)
                 .collect(Collectors.groupingBy(Episodio::getTemporada,
@@ -147,5 +200,49 @@ public class Principal {
         System.out.println("Episodio mejor evaluado: " + est.getMax());
         System.out.println("Episodio peor evaluado: " + est.getMin());
 
+         */
+
     }
+
+
+    private DatosSerie getDatosSerie(){
+        System.out.println("Escriba el nombre de la serie que desee buscar: ");
+        var nombreSerie = sc.nextLine();
+        var json = consumoAPI.obtenerDatos(URL_BASE + nombreSerie.replace(" ", "+") + APIKEY);
+        System.out.println(json);
+        DatosSerie datos = conversor.obtenerDatos(json, DatosSerie.class);
+        return datos;
+    }
+
+    private void buscarSerieWeb(){
+        DatosSerie datos = getDatosSerie();
+        datosSeries.add(datos);
+        System.out.println(datos);
+    }
+
+    private void buscarEpisodioPorSerie(){
+        DatosSerie datosSerie = getDatosSerie();
+        List<DatosTemporada> temporadas = new ArrayList<>();
+
+        for (int i = 1; i <= datosSerie.totalTemporadas(); i++)
+        {
+            var json = consumoAPI.obtenerDatos(URL_BASE + datosSerie.titulo().replace(" ", "+") + "&Season="
+                    + i + APIKEY);
+            DatosTemporada datosTemporada = conversor.obtenerDatos(json, DatosTemporada.class);
+            temporadas.add(datosTemporada);
+        }
+        temporadas.forEach(System.out::println);
+    }
+
+    private void mostrarSeriesBuscadas() {
+        List<Serie> series = new ArrayList<>();
+        series = datosSeries.stream()
+                .map(e -> new Serie(e))
+                .collect(Collectors.toList());
+
+        series.stream()
+                .sorted(Comparator.comparing(Serie::getGenero))
+                .forEach(System.out::println);
+    }
+
 }
