@@ -1,22 +1,30 @@
 package com.alura.screenmatch.model;
 
-import java.nio.DoubleBuffer;
-import java.security.spec.ECPoint;
-import java.time.DateTimeException;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 
+@Entity
+@Table(name = "episodios")
 public class Episodio {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @Column(unique = false)
     private Integer temporada;
-    private String Titulo;
+    private String titulo;
     private Integer numeroEpisodio;
     private Double evaluacion;
     private LocalDate fechaLanzamiento;
 
+    @ManyToOne //Se indica la relación mucho a uno con respecto a la serie
+    private Serie serie;
+
     public Episodio(Integer numero, DatosEpisodio d){
         this.temporada = numero;
-        this.Titulo = d.titulo();
+        this.titulo = d.titulo();
         this.numeroEpisodio = d.numeroEpisodio();
         try {
             this.evaluacion = Double.valueOf(d.evaluacion());
@@ -31,6 +39,18 @@ public class Episodio {
 
     }
 
+    public Episodio() {
+
+    }
+
+    public Serie getSerie() {
+        return serie;
+    }
+
+    public void setSerie(Serie serie) {
+        this.serie = serie;
+    }
+
     public Integer getTemporada() {
         return temporada;
     }
@@ -40,11 +60,11 @@ public class Episodio {
     }
 
     public String getTitulo() {
-        return Titulo;
+        return titulo;
     }
 
     public void setTitulo(String titulo) {
-        Titulo = titulo;
+        this.titulo = titulo;
     }
 
     public Integer getNumeroEpisodio() {
@@ -74,7 +94,7 @@ public class Episodio {
     @Override
     public String toString() {
         return "Temporada: " + temporada +
-                ", Titulo: " + Titulo + '\'' +
+                ", Titulo: " + titulo + '\'' +
                 ", Numero de episodio: " + numeroEpisodio +
                 ", Evaluación" + evaluacion +
                 ", Fecha de lanzamiento: " + fechaLanzamiento;
